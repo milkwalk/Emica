@@ -15,4 +15,5 @@ This is a very simple <a href="http://spigotmc.org">Spigot</a> based <a href="ht
 
 <strong>This bot does not support multiple Discord servers.</strong>
 
-<center><a href="https://www.spigotmc.org/resources/emica-the-discord-music-bot.58403/">Spigot page</a></center>
+<h2>Visit spigot page</h2>
+You can download compiled plugin (drag & drop) on <a href="https://www.spigotmc.org/resources/emica-the-discord-music-bot.58403/">Spigot page</a>
