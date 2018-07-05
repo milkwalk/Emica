@@ -14,3 +14,5 @@ This is a very simple <a href="http://spigotmc.org">Spigot</a> based <a href="ht
  </ul>
 
 <strong>This bot does not support multiple Discord servers.</strong>
+
+<center><a href="https://www.spigotmc.org/resources/emica-the-discord-music-bot.58403/">Spigot page</a></center>
