@@ -1,7 +1,6 @@
 package cz.dubcat.emica;
 
 import cz.dubcat.emica.events.OnEnable;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -23,9 +22,7 @@ public class Emica extends JavaPlugin {
 	private static long TEXT_CHANNEL_ID = 0L;
 	public static String COMMAND = "!emica";
 
-	private static List<String> PLAY_LIST = Arrays.asList(new String[] { "https://www.youtube.com/watch?v=5-xhpcgBMe4",
-			"https://www.youtube.com/playlist?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj",
-			"https://www.youtube.com/watch?v=YcTCIMKeiNQ" });
+	private static List<String> PLAY_LIST;
 
 	public Emica() {
 		this.scheduler = Executors.newScheduledThreadPool(1);
@@ -42,11 +39,17 @@ public class Emica extends JavaPlugin {
 		if (getConfig().getLong("settings.text_channel_id") != 0L) {
 			TEXT_CHANNEL_ID = getConfig().getLong("settings.text_channel_id");
 		}
-		PLAY_LIST = (List<String>) getConfig().getList("playlist");
+		
+		List<String> tempPlayList = (List<String>) getConfig().getList("playlist");
+		
 		if (getConfig().getBoolean("settings.shuffle_music_onload")) {
-			Collections.shuffle(PLAY_LIST);
-			getLogger().info("Playlist is shuffled");
+			Collections.shuffle(tempPlayList);
+			
+			getLogger().info("Playlist was shuffled.");
 		}
+		
+		PLAY_LIST = tempPlayList;
+		
 		COMMAND = getConfig().getString("settings.command.prefix");
 
 		plugin = this;
