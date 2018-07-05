@@ -1,0 +1,27 @@
+#Note that for changes to take effect you need to RESTART server.
+#Your bot token
+bot_token: ""
+#Your discord server ID
+server_id: 332910375790051328
+#The id channel ID where bot is supposed to connect
+voice_channel_id: 464236670796169218
+
+settings:
+  #Prefix of the command
+  command:
+    #Command for checking current song
+    prefix: "!emica"
+    #Channel where users are allowed to write above command, if set to 0 this is ignored.
+    text_channel_id: 0
+  #Do you want to shuffle the playlist?
+  shuffle_music_onload: true
+  #The text that shows under the name
+  listetning_text: "music"
+  #Default player volume (integer) min 0 max 100
+  default_player_volume: 40
+
+#Lists of songs/playlists form youtube/spotify etc.
+playlist:
+- 'https://www.youtube.com/watch?v=5-xhpcgBMe4'
+- 'https://www.youtube.com/playlist?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj'
+- 'https://www.youtube.com/watch?v=YcTCIMKeiNQ'
