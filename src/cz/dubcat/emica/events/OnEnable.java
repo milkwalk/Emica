@@ -61,7 +61,7 @@ public class OnEnable {
 
 				embed.withTitle(track.getInfo().title);
 				embed.withDescription("**Track link** " + track.getInfo().uri);
-				embed.appendField("Lenght", convertSecondsToString((int) (track.getDuration() / 1000L)), true);
+				embed.appendField("Length", convertSecondsToString((int) (track.getDuration() / 1000L)), true);
 				embed.appendField("Remaining",
 						convertSecondsToString((int) ((track.getDuration() - track.getPosition()) / 1000L)), true);
 				embed.appendField("State", track.getState().name(), true);
