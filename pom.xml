@@ -2,14 +2,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>Emica</groupId>
   <artifactId>Emica</artifactId>
-  <version>0.1.3-SNAPSHOT</version>
+  <version>0.1.4-SNAPSHOT</version>
   <build>
     <sourceDirectory>src</sourceDirectory>
     <resources>
       <resource>
         <directory>resources</directory>
         <includes>
-          <include>youtube.properties</include>
+          <include>config.yml</include>
           <include>plugin.yml</include>
         </includes>
       </resource>
