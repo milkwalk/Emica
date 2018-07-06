@@ -28,26 +28,25 @@ public class TrackSheduler extends AudioEventAdapter {
 	}
 	  
 	  public void queue(AudioTrack track) {
-	    // Calling startTrack with the noInterrupt set to true will start the track only if nothing is currently playing. If
-	    // something is playing, it returns false and does nothing. In that case the player was already playing so this
-	    // track goes to the queue instead.
-	    if (!player.startTrack(track, true)) {
-	      queue.offer(track);
-	    }
+		  if (!player.startTrack(track, true)) {
+			  queue.offer(track);
+		  }
 	  }
-
-	  public void nextTrack() {
-	    // Start the next track, regardless of if something is already playing or not. In case queue was empty, we are
-	    // giving null to startTrack, which is a valid argument and will simply stop the player.
-	    player.startTrack(queue.poll(), false);
+	  
+	  public void nextTrack(AudioTrack current) {
+		  if(isLoopEnabled()) {	  
+			  queue.offer(current.makeClone());
+		  }
+		  player.startTrack(queue.poll(), false);   
 	  }
 
 	  @Override
 	  public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
 	    if (endReason.mayStartNext) {
-	      nextTrack();
-	      if(isLoopEnabled())
-	    	  queue(track.makeClone());
+	      nextTrack(track);
+	      if(isLoopEnabled()) {
+	    	  queue.offer(track.makeClone());
+	      }
 	    }
 	  }
 	  

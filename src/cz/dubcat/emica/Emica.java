@@ -19,7 +19,7 @@ public class Emica extends JavaPlugin {
 	private final ScheduledExecutorService scheduler;
 	private static long SERVER_ID;
 	private static long VOICE_CHANNEL_ID;
-	private static long TEXT_CHANNEL_ID = 0L;
+	private static long TEXT_CHANNEL_ID = 0;
 	public static String COMMAND = "!emica";
 
 	private static List<String> PLAY_LIST;
@@ -36,9 +36,7 @@ public class Emica extends JavaPlugin {
 
 		SERVER_ID = getConfig().getLong("server_id");
 		VOICE_CHANNEL_ID = getConfig().getLong("voice_channel_id");
-		if (getConfig().getLong("settings.text_channel_id") != 0L) {
-			TEXT_CHANNEL_ID = getConfig().getLong("settings.text_channel_id");
-		}
+		TEXT_CHANNEL_ID = getConfig().getLong("settings.command.text_channel_id");
 		
 		List<String> tempPlayList = (List<String>) getConfig().getList("playlist");
 		

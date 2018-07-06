@@ -1,5 +1,6 @@
 package cz.dubcat.emica.events;
 
+import java.awt.Color;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -27,7 +28,7 @@ import sx.blah.discord.util.EmbedBuilder;
 public class OnEnable {
 	static AudioPlayerManager playerManager;
 	static ServerInformation info;
-
+	
 	@EventSubscriber
 	public void onReady(ReadyEvent e) {
 		IGuild guild = Emica.getBot().getGuildByID(Emica.getServerID());
@@ -44,18 +45,23 @@ public class OnEnable {
 		joinVoiceChannel();
 		loadSongs();
 		Emica.getBot().changePresence(StatusType.ONLINE, ActivityType.LISTENING,
-				Emica.getPlugin().getConfig().getString("settings.listetning_text"));
+		Emica.getPlugin().getConfig().getString("settings.listetning_text"));
 		Emica.log.info("Connected and loaded songs.");
 	}
 
 	@EventSubscriber
 	public void onReady(MessageReceivedEvent e) {
+		IGuild guild = e.getGuild();
 		IChannel channel = e.getChannel();
+		
+		String[] args = e.getMessage().getContent().split(" ");
 		if (e.getMessage().getContent().startsWith(Emica.COMMAND)) {
-			if ((Emica.getTextChannelID() != 0L) && (channel.getLongID() != Emica.getTextChannelID())) {
+			
+			if ((Emica.getTextChannelID() != 0) && (channel.getLongID() != Emica.getTextChannelID())) {
 				return;
 			}
-			if (info.player.getPlayingTrack() != null) {
+			
+			if (args.length == 1 && info.player.getPlayingTrack() != null) {
 				AudioTrack track = info.player.getPlayingTrack();
 				EmbedBuilder embed = new EmbedBuilder();
 
@@ -66,6 +72,41 @@ public class OnEnable {
 						convertSecondsToString((int) ((track.getDuration() - track.getPosition()) / 1000L)), true);
 				embed.appendField("State", track.getState().name(), true);
 
+				channel.sendMessage(embed.build());
+			} else if(args.length == 2 && args[1].equalsIgnoreCase("skip")) {
+				IVoiceChannel vc = guild.getVoiceChannelByID(Emica.getVoiceChannelID());
+				int usersNumber = vc.getConnectedUsers().size()-1;
+				if(e.getAuthor().getVoiceStateForGuild(guild).getChannel().getLongID() == Emica.getVoiceChannelID() && usersNumber == 1) {
+					
+					AudioTrack track = info.player.getPlayingTrack();
+					EmbedBuilder embed = new EmbedBuilder();
+					
+					embed.withColor(Color.CYAN);
+					embed.withTitle("Skipped "+track.getInfo().title);
+					embed.withDescription("Track has been skipped");
+
+					channel.sendMessage(embed.build());
+					
+					info.scheduler.nextTrack(info.player.getPlayingTrack());
+				}
+			} else if(args.length == 2 && args[1].equalsIgnoreCase("playlist")) {
+				EmbedBuilder embed = new EmbedBuilder();
+				
+				embed.withColor(Color.GREEN);
+				int i = 0;
+				long totalTime = 0;
+				embed.withDescription("**Playlist:** \n");
+				
+				for(AudioTrack track : info.scheduler.getQueue()) {
+					if(i == 0)
+						embed.appendDesc("\n:arrow_forward: **PLAYING** [" + track.getInfo().title + "]("+track.getInfo().uri+")");
+					else
+						embed.appendDesc("\n"+i + ". [" + track.getInfo().title + "]("+track.getInfo().uri+")");
+					i++;
+					totalTime += track.getDuration();
+				}
+
+				embed.appendDesc("\n\n**Total playtime:** " + convertSecondsToString((int)(totalTime/1000)));
 				channel.sendMessage(embed.build());
 			}
 		}
