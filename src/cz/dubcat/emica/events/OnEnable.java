@@ -14,7 +14,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import cz.dubcat.emica.Emica;
-import cz.dubcat.emica.constructors.EmblemTask;
+import cz.dubcat.emica.constructors.MetaTextTask;
 import cz.dubcat.emica.constructors.ServerInformation;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
@@ -48,7 +48,7 @@ public class OnEnable {
 
 		joinVoiceChannel();
 		loadSongs();	
-		Emica.getScheduler().scheduleAtFixedRate(new EmblemTask(), 1000, 5000, TimeUnit.MILLISECONDS);
+		Emica.getScheduler().scheduleAtFixedRate(new MetaTextTask(), 1000, 5000, TimeUnit.MILLISECONDS);
 		Emica.log.info("Connected and loaded songs.");
 	}
 
