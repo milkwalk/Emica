@@ -16,7 +16,7 @@ public class Emica extends JavaPlugin {
 	private static IDiscordClient bot;
 	public static Logger log;
 	private static Emica plugin;
-	private final ScheduledExecutorService scheduler;
+	private static ScheduledExecutorService scheduler;
 	private static long SERVER_ID;
 	private static long VOICE_CHANNEL_ID;
 	private static long TEXT_CHANNEL_ID = 0;
@@ -24,15 +24,13 @@ public class Emica extends JavaPlugin {
 
 	private static List<String> PLAY_LIST;
 
-	public Emica() {
-		this.scheduler = Executors.newScheduledThreadPool(1);
-	}
-
 	@SuppressWarnings("unchecked")
 	@Override
 	public void onEnable() {
 		getConfig().options().copyDefaults(true);
 		saveDefaultConfig();
+		
+		scheduler = Executors.newScheduledThreadPool(1);
 
 		SERVER_ID = getConfig().getLong("server_id");
 		VOICE_CHANNEL_ID = getConfig().getLong("voice_channel_id");
@@ -72,8 +70,8 @@ public class Emica extends JavaPlugin {
 		dispatcher.registerListener(new OnEnable());
 	}
 
-	public ScheduledExecutorService getScheduler() {
-		return this.scheduler;
+	public static ScheduledExecutorService getScheduler() {
+		return scheduler;
 	}
 
 	private static IDiscordClient createClient(String token, boolean login) {
@@ -113,4 +111,6 @@ public class Emica extends JavaPlugin {
 	public static long getTextChannelID() {
 		return TEXT_CHANNEL_ID;
 	}
+	
+	
 }

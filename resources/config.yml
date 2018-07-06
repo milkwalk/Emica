@@ -2,7 +2,8 @@
 #Author: Qifi (elving21)
 #Note that for changes to take effect you need to RESTART server.
 
-#Your bot token
+#Your application token
+#If you dont have the application created yet you can do it here: https://discordapp.com/developers/applications/me/create
 bot_token: ""
 #Your discord server ID
 server_id: 332910375790051328
@@ -11,15 +12,20 @@ voice_channel_id: 464236670796169218
 
 settings:
   command:
-    #Command for checking current song
+    #Command for checking current song's name, url and other info
+    #Commands: !emica, !emica skip (works only if 1 person is in the VC), !emica playlist (needs administrator permission)
     prefix: "!emica"
     #Channel where users are allowed to write above command, if set to 0 this is ignored and users are allowed
     #to use this command in every text channel
     text_channel_id: 0
   #Do you want to shuffle the playlist?
   shuffle_music_onload: true
-  #The text that shows under the name
-  listetning_text: "music"
+  #The text that shows next to the bot's name
+  #%song_name% will get replaced with songs actual name
+  #Refresh rate of this is 5 seconds. Placeholders you can use: 
+  #%time_left% (time left till the end of the song)
+  #%song_name% (song's name)
+  listening_text: "%song_name% | Next song in %time_left%"
   #Default player volume (integer) min 0 max 100
   default_player_volume: 40
 

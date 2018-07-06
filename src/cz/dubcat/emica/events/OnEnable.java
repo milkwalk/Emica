@@ -14,20 +14,24 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import cz.dubcat.emica.Emica;
+import cz.dubcat.emica.constructors.EmblemTask;
 import cz.dubcat.emica.constructors.ServerInformation;
 import sx.blah.discord.api.events.EventSubscriber;
+import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.ActivityType;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IVoiceChannel;
+import sx.blah.discord.handle.obj.Permissions;
 import sx.blah.discord.handle.obj.StatusType;
 import sx.blah.discord.util.EmbedBuilder;
+import sx.blah.discord.util.PermissionUtils;
 
 public class OnEnable {
 	static AudioPlayerManager playerManager;
-	static ServerInformation info;
+	public static ServerInformation info;
 	
 	@EventSubscriber
 	public void onReady(ReadyEvent e) {
@@ -43,9 +47,8 @@ public class OnEnable {
 		guild.getAudioManager().setAudioProvider(info.getAudioProvider());
 
 		joinVoiceChannel();
-		loadSongs();
-		Emica.getBot().changePresence(StatusType.ONLINE, ActivityType.LISTENING,
-		Emica.getPlugin().getConfig().getString("settings.listetning_text"));
+		loadSongs();	
+		Emica.getScheduler().scheduleAtFixedRate(new EmblemTask(), 1000, 5000, TimeUnit.MILLISECONDS);
 		Emica.log.info("Connected and loaded songs.");
 	}
 
@@ -84,35 +87,56 @@ public class OnEnable {
 					embed.withColor(Color.CYAN);
 					embed.withTitle("Skipped "+track.getInfo().title);
 					embed.withDescription("Track has been skipped");
-
+					
 					channel.sendMessage(embed.build());
 					
 					info.scheduler.nextTrack(info.player.getPlayingTrack());
 				}
-			} else if(args.length == 2 && args[1].equalsIgnoreCase("playlist")) {
+			} else if(args.length == 2 && args[1].equalsIgnoreCase("playlist") && PermissionUtils.hasPermissions(guild, e.getAuthor(), Permissions.ADMINISTRATOR)) {
 				EmbedBuilder embed = new EmbedBuilder();
 				
 				embed.withColor(Color.GREEN);
-				int i = 0;
+				int i = 1;
 				long totalTime = 0;
 				embed.withDescription("**Playlist:** \n");
+				long delay = 0;
 				
+				embed.appendDesc("\n:arrow_forward: **PLAYING** [" + info.player.getPlayingTrack().getInfo().title + "]("+info.player.getPlayingTrack().getInfo().uri+")\n");
 				for(AudioTrack track : info.scheduler.getQueue()) {
-					if(i == 0)
-						embed.appendDesc("\n:arrow_forward: **PLAYING** [" + track.getInfo().title + "]("+track.getInfo().uri+")");
-					else
-						embed.appendDesc("\n"+i + ". [" + track.getInfo().title + "]("+track.getInfo().uri+")");
+					
+					if(embed.getTotalVisibleCharacters() >= EmbedBuilder.DESCRIPTION_CONTENT_LIMIT - 100) {
+						EmbedObject embedToSend = embed.build();
+						embed.clearFields();
+						embed.withDesc("");
+						Emica.getScheduler().schedule(new Runnable() {
+							@Override
+							public void run() {
+								channel.sendMessage(embedToSend);
+							}
+							
+						}, delay, TimeUnit.MILLISECONDS);
+						delay += 1000;
+					}
+						
+					embed.appendDesc("\n**"+i + ".** " + track.getInfo().title);
 					i++;
 					totalTime += track.getDuration();
 				}
-
-				embed.appendDesc("\n\n**Total playtime:** " + convertSecondsToString((int)(totalTime/1000)));
-				channel.sendMessage(embed.build());
+				
+				long finalTime = totalTime;
+				Emica.getScheduler().schedule(new Runnable() {
+					@Override
+					public void run() {
+						embed.appendDesc("\n\n**Total playtime:** " + convertSecondsToString((int)(finalTime/1000)));
+						channel.sendMessage(embed.build());
+					}
+					
+				}, delay, TimeUnit.MILLISECONDS);
 			}
 		}
 	}
 
-	private static String convertSecondsToString(int seconds) {
+	public static String convertSecondsToString(int seconds) {
 		int day = (int) TimeUnit.SECONDS.toDays(seconds);
 		long hours = TimeUnit.SECONDS.toHours(seconds) - day * 24;
 		long minute = TimeUnit.SECONDS.toMinutes(seconds) - TimeUnit.SECONDS.toHours(seconds) * 60L;
