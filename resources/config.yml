@@ -25,6 +25,7 @@ settings:
   #Refresh rate of this is 5 seconds. Placeholders you can use: 
   #%time_left% (time left till the end of the song)
   #%song_name% (song's name)
+  #%total_time% (total song's time)
   listening_text: "%song_name% | Next song in %time_left%"
   #Default player volume (integer) min 0 max 100
   default_player_volume: 40
