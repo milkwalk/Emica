@@ -51,6 +51,7 @@ public class Emica extends JavaPlugin {
 		plugin = this;
 		log = getLogger();
 		bot = createClient(getConfig().getString("bot_token"), true);
+		
 		registerEvents();
 		getLogger().info("We are online and rolling.");
 	}

@@ -20,12 +20,10 @@ import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
-import sx.blah.discord.handle.obj.ActivityType;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IVoiceChannel;
 import sx.blah.discord.handle.obj.Permissions;
-import sx.blah.discord.handle.obj.StatusType;
 import sx.blah.discord.util.EmbedBuilder;
 import sx.blah.discord.util.PermissionUtils;
 
@@ -104,8 +102,8 @@ public class OnEnable {
 				embed.appendDesc("\n:arrow_forward: **PLAYING** [" + info.player.getPlayingTrack().getInfo().title + "]("+info.player.getPlayingTrack().getInfo().uri+")\n");
 				for(AudioTrack track : info.scheduler.getQueue()) {
 					
-					if(embed.getTotalVisibleCharacters() >= EmbedBuilder.DESCRIPTION_CONTENT_LIMIT - 100) {
-						EmbedObject embedToSend = embed.build();
+					if(embed.getTotalVisibleCharacters() + track.getInfo().title.length() + 20 >= EmbedBuilder.DESCRIPTION_CONTENT_LIMIT - 50) {
+						final EmbedObject embedToSend = embed.build();
 						embed.clearFields();
 						embed.withDesc("");
 						Emica.getScheduler().schedule(new Runnable() {
@@ -115,7 +113,7 @@ public class OnEnable {
 							}
 							
 						}, delay, TimeUnit.MILLISECONDS);
-						delay += 1000;
+						delay += 2000;
 					}
 						
 					embed.appendDesc("\n**"+i + ".** " + track.getInfo().title);
@@ -165,35 +163,38 @@ public class OnEnable {
 	}
 
 	private void loadSongs(){
-    for (final String url : Emica.getPlayList()) {
-      playerManager.loadItemOrdered(info, url, new AudioLoadResultHandler(){
-        public void trackLoaded(AudioTrack track){
-          OnEnable.info.scheduler.queue(track);
-          Emica.getLog().info("Adding song to queue " + track.getInfo().title);
-        }
-        
-        public void playlistLoaded(AudioPlaylist playlist){
-          Emica.getLog().info("Adding playlist to queue " + playlist.getName());
-          List<AudioTrack> tracks = playlist.getTracks();
-          
-          if(Emica.getPlugin().getConfig().getBoolean("settings.shuffle_music_onload")) {
-            Collections.shuffle(tracks);
-          }
-          
-          for (AudioTrack track : tracks) {
-            OnEnable.info.scheduler.queue(track);
-          }
-          
-        }
-        
-        public void noMatches(){
-          Emica.getLog().info("Nothing found by " + url);
-        }
-        
-        public void loadFailed(FriendlyException e){
-          Emica.getLog().info("Could not play " + e.getMessage());
-        }
-      });
-    }
+		boolean shuffle = Emica.getPlugin().getConfig().getBoolean("settings.shuffle_music_onload");
+		
+	    for (final String url : Emica.getPlayList()) {
+	      playerManager.loadItemOrdered(info, url, new AudioLoadResultHandler(){
+	        public void trackLoaded(AudioTrack track){
+	          OnEnable.info.scheduler.queue(track);
+	          Emica.getLog().info("Adding song to queue " + track.getInfo().title);
+	        }
+	        
+	        public void playlistLoaded(AudioPlaylist playlist){
+	        	
+	          Emica.getLog().info("Adding playlist to queue " + playlist.getName());
+	          List<AudioTrack> tracks = playlist.getTracks();
+	          
+	          if(shuffle) {
+	        	  Collections.shuffle(tracks);
+	          }
+	          
+	          for (AudioTrack track : tracks) {
+	            OnEnable.info.scheduler.queue(track);
+	          }
+	          
+	        }
+	        
+	        public void noMatches(){
+	          Emica.getLog().info("Nothing found by " + url);
+	        }
+	        
+	        public void loadFailed(FriendlyException e){
+	          Emica.getLog().info("Could not play " + e.getMessage());
+	        }
+	      });
+	    }
   }
 }
