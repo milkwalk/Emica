@@ -6,43 +6,43 @@ import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
 import sx.blah.discord.handle.audio.AudioEncodingType;
 import sx.blah.discord.handle.audio.IAudioProvider;
 
-public class MPlayer  implements IAudioProvider{
-	
-	  private final AudioPlayer audioPlayer;
-	  private AudioFrame lastFrame;
+public class MPlayer implements IAudioProvider {
 
-	  public MPlayer(AudioPlayer audioPlayer) {
-	    this.audioPlayer = audioPlayer;
-	  }
+    private final AudioPlayer audioPlayer;
+    private AudioFrame lastFrame;
 
-	  @Override
-	  public boolean isReady() {
-	    if (lastFrame == null) {
-	      lastFrame = audioPlayer.provide();
-	    }
+    public MPlayer(AudioPlayer audioPlayer) {
+        this.audioPlayer = audioPlayer;
+    }
 
-	    return lastFrame != null;
-	  }
+    @Override
+    public boolean isReady() {
+        if (lastFrame == null) {
+            lastFrame = audioPlayer.provide();
+        }
 
-	  @Override
-	  public byte[] provide() {
-	    if (lastFrame == null) {
-	      lastFrame = audioPlayer.provide();
-	    }
+        return lastFrame != null;
+    }
 
-	    byte[] data = lastFrame != null ? lastFrame.getData() : null;
-	    lastFrame = null;
+    @Override
+    public byte[] provide() {
+        if (lastFrame == null) {
+            lastFrame = audioPlayer.provide();
+        }
 
-	    return data;
-	  }
+        byte[] data = lastFrame != null ? lastFrame.getData() : null;
+        lastFrame = null;
 
-	  @Override
-	  public int getChannels() {
-	    return 2;
-	  }
+        return data;
+    }
 
-	  @Override
-	  public AudioEncodingType getAudioEncodingType() {
-	    return AudioEncodingType.OPUS;
-	  }
+    @Override
+    public int getChannels() {
+        return 2;
+    }
+
+    @Override
+    public AudioEncodingType getAudioEncodingType() {
+        return AudioEncodingType.OPUS;
+    }
 }

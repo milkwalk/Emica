@@ -28,173 +28,178 @@ import sx.blah.discord.util.EmbedBuilder;
 import sx.blah.discord.util.PermissionUtils;
 
 public class OnEnable {
-	static AudioPlayerManager playerManager;
-	public static ServerInformation info;
-	
-	@EventSubscriber
-	public void onReady(ReadyEvent e) {
-		IGuild guild = Emica.getBot().getGuildByID(Emica.getServerID());
-		playerManager = new DefaultAudioPlayerManager();
+    static AudioPlayerManager playerManager;
+    public static ServerInformation info;
 
-		AudioSourceManagers.registerRemoteSources(playerManager);
-		AudioSourceManagers.registerLocalSource(playerManager);
+    @EventSubscriber
+    public void onReady(ReadyEvent e) {
+        IGuild guild = Emica.getBot().getGuildByID(Emica.getServerID());
+        playerManager = new DefaultAudioPlayerManager();
 
-		info = new ServerInformation(playerManager);
-		info.player.setVolume(Emica.getPlugin().getConfig().getInt("settings.default_player_volume"));
-		info.scheduler.setLoopEnabled(true);
-		guild.getAudioManager().setAudioProvider(info.getAudioProvider());
+        AudioSourceManagers.registerRemoteSources(playerManager);
+        AudioSourceManagers.registerLocalSource(playerManager);
 
-		joinVoiceChannel();
-		loadSongs();	
-		Emica.getScheduler().scheduleAtFixedRate(new MetaTextTask(), 1000, 5000, TimeUnit.MILLISECONDS);
-		Emica.log.info("Connected and loaded songs.");
-	}
+        info = new ServerInformation(playerManager);
+        info.player.setVolume(Emica.getPlugin().getConfig().getInt("settings.default_player_volume"));
+        info.scheduler.setLoopEnabled(true);
+        guild.getAudioManager().setAudioProvider(info.getAudioProvider());
 
-	@EventSubscriber
-	public void onReady(MessageReceivedEvent e) {
-		IGuild guild = e.getGuild();
-		IChannel channel = e.getChannel();
-		
-		String[] args = e.getMessage().getContent().split(" ");
-		if (e.getMessage().getContent().startsWith(Emica.COMMAND)) {
-			
-			if ((Emica.getTextChannelID() != 0) && (channel.getLongID() != Emica.getTextChannelID())) {
-				return;
-			}
-			
-			if (args.length == 1 && info.player.getPlayingTrack() != null) {
-				AudioTrack track = info.player.getPlayingTrack();
-				EmbedBuilder embed = new EmbedBuilder();
+        joinVoiceChannel();
+        loadSongs();
+        Emica.getScheduler().scheduleAtFixedRate(new MetaTextTask(), 1000, 10000, TimeUnit.MILLISECONDS);
+        Emica.log.info("Connected and loaded songs.");
+    }
 
-				embed.withTitle(track.getInfo().title);
-				embed.withDescription("**Track link** " + track.getInfo().uri);
-				embed.appendField("Length", convertSecondsToString((int) (track.getDuration() / 1000L)), true);
-				embed.appendField("Remaining",
-						convertSecondsToString((int) ((track.getDuration() - track.getPosition()) / 1000L)), true);
-				embed.appendField("State", track.getState().name(), true);
+    @EventSubscriber
+    public void onReady(MessageReceivedEvent e) {
+        IGuild guild = e.getGuild();
+        IChannel channel = e.getChannel();
 
-				channel.sendMessage(embed.build());
-			} else if(args.length == 2 && args[1].equalsIgnoreCase("skip")) {
-				IVoiceChannel vc = guild.getVoiceChannelByID(Emica.getVoiceChannelID());
-				int usersNumber = vc.getConnectedUsers().size()-1;
-				if(e.getAuthor().getVoiceStateForGuild(guild).getChannel().getLongID() == Emica.getVoiceChannelID() && usersNumber == 1) {
-					
-					AudioTrack track = info.player.getPlayingTrack();
-					EmbedBuilder embed = new EmbedBuilder();
-					
-					embed.withColor(Color.CYAN);
-					embed.withTitle("Skipped "+track.getInfo().title);
-					embed.withDescription("Track has been skipped");
-					
-					channel.sendMessage(embed.build());
-					
-					info.scheduler.nextTrack(info.player.getPlayingTrack());
-				}
-			} else if(args.length == 2 && args[1].equalsIgnoreCase("playlist") && PermissionUtils.hasPermissions(guild, e.getAuthor(), Permissions.ADMINISTRATOR)) {
-				EmbedBuilder embed = new EmbedBuilder();
-				
-				embed.withColor(Color.GREEN);
-				int i = 1;
-				long totalTime = 0;
-				embed.withDescription("**Playlist:** \n");
-				long delay = 0;
-				
-				embed.appendDesc("\n:arrow_forward: **PLAYING** [" + info.player.getPlayingTrack().getInfo().title + "]("+info.player.getPlayingTrack().getInfo().uri+")\n");
-				for(AudioTrack track : info.scheduler.getQueue()) {
-					
-					if(embed.getTotalVisibleCharacters() + track.getInfo().title.length() + 20 >= EmbedBuilder.DESCRIPTION_CONTENT_LIMIT - 50) {
-						final EmbedObject embedToSend = embed.build();
-						embed.clearFields();
-						embed.withDesc("");
-						Emica.getScheduler().schedule(new Runnable() {
-							@Override
-							public void run() {
-								channel.sendMessage(embedToSend);
-							}
-							
-						}, delay, TimeUnit.MILLISECONDS);
-						delay += 2000;
-					}
-						
-					embed.appendDesc("\n**"+i + ".** " + track.getInfo().title);
-					i++;
-					totalTime += track.getDuration();
-				}
-				
-				long finalTime = totalTime;
-				Emica.getScheduler().schedule(new Runnable() {
-					@Override
-					public void run() {
-						embed.appendDesc("\n\n**Total playtime:** " + convertSecondsToString((int)(finalTime/1000)));
-						channel.sendMessage(embed.build());
-					}
-					
-				}, delay, TimeUnit.MILLISECONDS);
-			}
-		}
-	}
+        String[] args = e.getMessage().getContent().split(" ");
+        if (e.getMessage().getContent().startsWith(Emica.COMMAND)) {
 
-	public static String convertSecondsToString(int seconds) {
-		int day = (int) TimeUnit.SECONDS.toDays(seconds);
-		long hours = TimeUnit.SECONDS.toHours(seconds) - day * 24;
-		long minute = TimeUnit.SECONDS.toMinutes(seconds) - TimeUnit.SECONDS.toHours(seconds) * 60L;
-		long second = TimeUnit.SECONDS.toSeconds(seconds) - TimeUnit.SECONDS.toMinutes(seconds) * 60L;
+            if ((Emica.getTextChannelID() != 0) && (channel.getLongID() != Emica.getTextChannelID())) {
+                return;
+            }
 
-		StringBuilder sb = new StringBuilder();
-		if (day > 0) {
-			sb.append(day + "d ");
-		}
-		if (hours > 0L) {
-			sb.append(hours + "h ");
-		}
-		if (minute > 0L) {
-			sb.append(minute + "m ");
-		}
-		if (second > 0L) {
-			sb.append(second + "s");
-		}
-		return sb.toString();
-	}
+            if (args.length == 1 && info.player.getPlayingTrack() != null) {
+                AudioTrack track = info.player.getPlayingTrack();
+                EmbedBuilder embed = new EmbedBuilder();
 
-	private void joinVoiceChannel() {
-		IVoiceChannel chillstepChannel = Emica.getBot().getGuildByID(Emica.getServerID())
-				.getVoiceChannelByID(Emica.getVoiceChannelID());
-		chillstepChannel.join();
-	}
+                embed.withTitle(track.getInfo().title);
+                embed.withDescription("**Track link** " + track.getInfo().uri);
+                embed.appendField("Length", convertSecondsToString((int) (track.getDuration() / 1000L)), true);
+                embed.appendField("Remaining",
+                        convertSecondsToString((int) ((track.getDuration() - track.getPosition()) / 1000L)), true);
+                embed.appendField("State", track.getState().name(), true);
 
-	private void loadSongs(){
-		boolean shuffle = Emica.getPlugin().getConfig().getBoolean("settings.shuffle_music_onload");
-		
-	    for (final String url : Emica.getPlayList()) {
-	      playerManager.loadItemOrdered(info, url, new AudioLoadResultHandler(){
-	        public void trackLoaded(AudioTrack track){
-	          OnEnable.info.scheduler.queue(track);
-	          Emica.getLog().info("Adding song to queue " + track.getInfo().title);
-	        }
-	        
-	        public void playlistLoaded(AudioPlaylist playlist){
-	        	
-	          Emica.getLog().info("Adding playlist to queue " + playlist.getName());
-	          List<AudioTrack> tracks = playlist.getTracks();
-	          
-	          if(shuffle) {
-	        	  Collections.shuffle(tracks);
-	          }
-	          
-	          for (AudioTrack track : tracks) {
-	            OnEnable.info.scheduler.queue(track);
-	          }
-	          
-	        }
-	        
-	        public void noMatches(){
-	          Emica.getLog().info("Nothing found by " + url);
-	        }
-	        
-	        public void loadFailed(FriendlyException e){
-	          Emica.getLog().info("Could not play " + e.getMessage());
-	        }
-	      });
-	    }
-  }
+                channel.sendMessage(embed.build());
+            } else if (args.length == 2 && args[1].equalsIgnoreCase("skip")) {
+                IVoiceChannel vc = guild.getVoiceChannelByID(Emica.getVoiceChannelID());
+                int usersNumber = vc.getConnectedUsers().size() - 1;
+                if (e.getAuthor().getVoiceStateForGuild(guild).getChannel().getLongID() == Emica.getVoiceChannelID()
+                        && (usersNumber == 1
+                                || PermissionUtils.hasPermissions(guild, e.getAuthor(), Permissions.ADMINISTRATOR))) {
+
+                    AudioTrack track = info.player.getPlayingTrack();
+                    EmbedBuilder embed = new EmbedBuilder();
+
+                    embed.withColor(Color.CYAN);
+                    embed.withTitle("Skipped " + track.getInfo().title);
+                    embed.withDescription("Track has been skipped");
+
+                    channel.sendMessage(embed.build());
+
+                    info.scheduler.nextTrack(info.player.getPlayingTrack());
+                }
+            } else if (args.length == 2 && args[1].equalsIgnoreCase("playlist")
+                    && PermissionUtils.hasPermissions(guild, e.getAuthor(), Permissions.ADMINISTRATOR)) {
+                EmbedBuilder embed = new EmbedBuilder();
+
+                embed.withColor(Color.GREEN);
+                int i = 1;
+                long totalTime = 0;
+                embed.withDescription("**Playlist:** \n");
+                long delay = 0;
+
+                embed.appendDesc("\n:arrow_forward: **PLAYING** [" + info.player.getPlayingTrack().getInfo().title
+                        + "](" + info.player.getPlayingTrack().getInfo().uri + ")\n");
+                for (AudioTrack track : info.scheduler.getQueue()) {
+
+                    if (embed.getTotalVisibleCharacters() + track.getInfo().title.length()
+                            + 20 >= EmbedBuilder.DESCRIPTION_CONTENT_LIMIT - 50) {
+                        final EmbedObject embedToSend = embed.build();
+                        Emica.getScheduler().schedule(new Runnable() {
+                            @Override
+                            public void run() {
+                                channel.sendMessage(embedToSend);
+                            }
+
+                        }, delay, TimeUnit.MILLISECONDS);
+                        embed.clearFields();
+                        embed.withDesc("");
+                        delay += 2000;
+                    }
+
+                    embed.appendDesc("\n**" + i + ".** " + track.getInfo().title);
+                    i++;
+                    totalTime += track.getDuration();
+                }
+
+                long finalTime = totalTime;
+                Emica.getScheduler().schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        embed.appendDesc("\n\n**Total playtime:** " + convertSecondsToString((int) (finalTime / 1000)));
+                        channel.sendMessage(embed.build());
+                    }
+
+                }, delay, TimeUnit.MILLISECONDS);
+            }
+        }
+    }
+
+    public static String convertSecondsToString(int seconds) {
+        int day = (int) TimeUnit.SECONDS.toDays(seconds);
+        long hours = TimeUnit.SECONDS.toHours(seconds) - day * 24;
+        long minute = TimeUnit.SECONDS.toMinutes(seconds) - TimeUnit.SECONDS.toHours(seconds) * 60L;
+        long second = TimeUnit.SECONDS.toSeconds(seconds) - TimeUnit.SECONDS.toMinutes(seconds) * 60L;
+
+        StringBuilder sb = new StringBuilder();
+        if (day > 0) {
+            sb.append(day + "d ");
+        }
+        if (hours > 0L) {
+            sb.append(hours + "h ");
+        }
+        if (minute > 0L) {
+            sb.append(minute + "m ");
+        }
+        if (second > 0L) {
+            sb.append(second + "s");
+        }
+        return sb.toString();
+    }
+
+    private void joinVoiceChannel() {
+        IVoiceChannel chillstepChannel = Emica.getBot().getGuildByID(Emica.getServerID())
+                .getVoiceChannelByID(Emica.getVoiceChannelID());
+        chillstepChannel.join();
+    }
+
+    private void loadSongs() {
+        boolean shuffle = Emica.getPlugin().getConfig().getBoolean("settings.shuffle_music_onload");
+
+        for (final String url : Emica.getPlayList()) {
+            playerManager.loadItemOrdered(info, url, new AudioLoadResultHandler() {
+                public void trackLoaded(AudioTrack track) {
+                    OnEnable.info.scheduler.queue(track);
+                    Emica.getLog().info("Adding song to queue " + track.getInfo().title);
+                }
+
+                public void playlistLoaded(AudioPlaylist playlist) {
+
+                    Emica.getLog().info("Adding playlist to queue " + playlist.getName());
+                    List<AudioTrack> tracks = playlist.getTracks();
+
+                    if (shuffle) {
+                        Collections.shuffle(tracks);
+                    }
+
+                    for (AudioTrack track : tracks) {
+                        OnEnable.info.scheduler.queue(track);
+                    }
+
+                }
+
+                public void noMatches() {
+                    Emica.getLog().info("Nothing found by " + url);
+                }
+
+                public void loadFailed(FriendlyException e) {
+                    Emica.getLog().info("Could not play " + e.getMessage());
+                }
+            });
+        }
+    }
 }
